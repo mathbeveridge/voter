@@ -3,6 +3,8 @@ import numpy as np
 import flippable
 import checkflip
 
+import prefutils
+
 
 name_dic3 = {'7-6-5-4': 'A', '7-6-5-3': 'B'}
 
@@ -63,58 +65,80 @@ def name_for_id(id):
 
 
 
-def data_to_bin_array(data, dim):
-    return [checkflip.decimal_to_bin_array(x, dim) for x in data]
 
 #######
 
-sep4 = [
-    [15, 14, 13, 12, 11, 10, 7, 6],#
-    [15, 14, 13, 12, 11, 10, 7, 9],#
+sep4 = (
+    (15, 14, 13, 12, 11, 10, 7, 6),#
+    (15, 14, 13, 12, 11, 10, 7, 9),#
 
-    [15, 14, 13, 12, 11, 10, 9, 7],#
-    [15, 14, 13, 12, 11, 10, 9, 8],#
+    (15, 14, 13, 12, 11, 10, 9, 7),#
+    (15, 14, 13, 12, 11, 10, 9, 8),#
 
-    [15, 14, 13, 12, 11, 7, 10, 6],
-    [15, 14, 13, 12, 11, 7, 10, 9],#
-
-
-    [15, 14, 13, 11, 12, 10, 7, 6],#
-    [15, 14, 13, 11, 12, 10, 7, 9],#
-
-    [15, 14, 13, 11, 12, 10, 9, 7],#
-    [15, 14, 13, 11, 12, 10, 9, 8],#
-
-    [15, 14, 13, 11, 12, 7, 10, 9],#
-    [15, 14, 13, 11, 12, 7, 10, 6],
-
-    [15, 14, 13, 11, 7, 12, 10, 9],#
-    [15, 14, 13, 11, 7, 12, 10, 6]
-]
+    (15, 14, 13, 12, 11, 7, 10, 6),
+    (15, 14, 13, 12, 11, 7, 10, 9),#
 
 
-dim=6
+    (15, 14, 13, 11, 12, 10, 7, 6),#
+    (15, 14, 13, 11, 12, 10, 7, 9),#
+
+    (15, 14, 13, 11, 12, 10, 9, 7),#
+    (15, 14, 13, 11, 12, 10, 9, 8),#
+
+    (15, 14, 13, 11, 12, 7, 10, 9),#
+    (15, 14, 13, 11, 12, 7, 10, 6),
+
+    (15, 14, 13, 11, 7, 12, 10, 9),#
+    (15, 14, 13, 11, 7, 12, 10, 6)
+)
+
+name_dic4a = {
+    (15, 14, 13, 12, 11, 10, 7, 6): 0,
+    (15, 14, 13, 12, 11, 10, 7, 9): 1,
+
+    (15, 14, 13, 12, 11, 10, 9, 7): 2,
+    (15, 14, 13, 12, 11, 10, 9, 8): 3,
+
+    (15, 14, 13, 12, 11, 7, 10, 6): 4,
+    (15, 14, 13, 12, 11, 7, 10, 9): 5,
+
+
+    (15, 14, 13, 11, 12, 10, 7, 6): 6,
+    (15, 14, 13, 11, 12, 10, 7, 9): 7,
+
+    (15, 14, 13, 11, 12, 10, 9, 7): 8,
+    (15, 14, 13, 11, 12, 10, 9, 8): 9,
+
+    (15, 14, 13, 11, 12, 7, 10, 9): 10,
+    (15, 14, 13, 11, 12, 7, 10, 6): 11,
+
+    (15, 14, 13, 11, 7, 12, 10, 9): 12,
+    (15, 14, 13, 11, 7, 12, 10, 6): 13,
+}
+
+
+dim=5
 
 conn = mysql.connector.connect(host='localhost', database='mysql', user='root', password='50Fl**rs')
 
 cur = conn.cursor(buffered=True)
 
-#name_dic = name_dic4
+name_dic = name_dic4
 
 # populate the name_dic
-name_dic = {}
-cur.execute('SELECT id, name from Pref_Five')
+#name_dic = {}
+#cur.execute('SELECT id, name from Pref_Five')
 
-for (id, name) in cur:
-    name_dic[id] = name
+#for (id, name) in cur:
+#    name_dic[id] = name
 
 
 keep_running = True
 
 while (keep_running):
 
-    cur.execute('SELECT id FROM Pref_Six WHERE name IS NULL LIMIT 5000')
-    #cur.execute('SELECT id FROM Pref_Five')
+    #cur.execute('SELECT id FROM Pref_Six WHERE name IS NULL LIMIT 5000')
+    cur.execute('SELECT id FROM Pref_Five')
 
     id_list = []
 
@@ -133,7 +157,7 @@ while (keep_running):
         data = flippable.data_from_id(id)
 
         #data = flippable.data_from_top_half(id)
-        data_bin = data_to_bin_array(data, dim)
+        data_bin = prefutils.data_to_bin_array(data, dim)
 
         #print('++++++++++++ handling id', id)
 
@@ -190,8 +214,8 @@ while (keep_running):
 
         name = '(' + ''.join(name_array) + ')' + end
         name_list.append(name)
-        if not 'A' in name:
-            print(name)
+
+        print(name)
 
 
     #for id, name in zip(id_list, name_list):
@@ -206,10 +230,10 @@ while (keep_running):
     param_list = [(name, id) for name, id in zip(name_list, id_list)]
 
     #cur.executemany('UPDATE Pref_Five SET name=%s WHERE id=%s', param_list)
-    cur.executemany('UPDATE Pref_Six SET name=%s WHERE id=%s', param_list)
+    #cur.executemany('UPDATE Pref_Six SET name=%s WHERE id=%s', param_list)
 
 
-    conn.commit()
+    #conn.commit()
 
 
 

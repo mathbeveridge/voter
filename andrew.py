@@ -1,5 +1,10 @@
 import flippable
 import checkflip
+import prefutils
+
+
+
+# this is a file with some random test code
 
 mylist = reversed(range(0,128))
 mylist_str = [str(x) for x in mylist]
@@ -68,31 +73,37 @@ bottom = [18,11,17,12,10,7,16,6,9,8,5,3,4,2,1,0]
 top = [31-x for x in reversed(bottom)]
 data = top + bottom
 
-print(sum(data))
-print(31*16)
+# print(sum(data))
+# print(31*16)
+#
+# print(data)
+#
+# flip_pairs = flippable.get_flippable_pairs(data, dim)
+#
+#
+# print(data)
+#
+# for i, d in enumerate(data):
+#     bin_array = checkflip.int_to_bin_array(d)
+#     if len(bin_array) < dim:
+#         bin_array = [0] * (dim - len(bin_array)) + bin_array
+#     print(bin_array, '\t', d, '\t', i )
+#
+# print('\t', flip_pairs)
+#
+# ff_list = []
+# for f in flip_pairs:
+#     if checkflip.check_order(f[0], f[1]):
+#         comp = flippable.get_comp_subsets(f, dim)
+#         pair_list = [[f[0] + sum(s), f[1] + sum(s)] for s in comp]
+#         print('\t\t', f, pair_list)
+#         ff_list.append(pair_list)
+#     else:
+#         print('\tin  order:', f)
 
-print(data)
+dim = 5
 
-flip_pairs = flippable.get_flippable_pairs(data, dim)
+id_list = prefutils.get_id_list(5)
 
-
-print(data)
-
-for i, d in enumerate(data):
-    bin_array = checkflip.int_to_bin_array(d)
-    if len(bin_array) < dim:
-        bin_array = [0] * (dim - len(bin_array)) + bin_array
-    print(bin_array, '\t', d, '\t', i )
-
-print('\t', flip_pairs)
-
-ff_list = []
-for f in flip_pairs:
-    if checkflip.check_order(f[0], f[1]):
-        comp = flippable.get_comp_subsets(f, dim)
-        pair_list = [[f[0] + sum(s), f[1] + sum(s)] for s in comp]
-        print('\t\t', f, pair_list)
-        ff_list.append(pair_list)
-    else:
-        print('\tin  order:', f)
-
+for id in id_list:
+    print(id)
