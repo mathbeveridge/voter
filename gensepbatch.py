@@ -10,7 +10,8 @@ idx_update_flip_query = 4
 idx_update_processed_query = 5
 idx_unprocessed_count_query = 6
 
-
+# batch generation of CSPs
+# uses id to store CSP which is a string consisting of the top 2^(n-1) entries
 
 query_list_5 = [
     "SELECT id FROM Pref_Five WHERE processed = False LIMIT 5000",  # get unprocessed query

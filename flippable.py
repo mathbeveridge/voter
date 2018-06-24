@@ -1,6 +1,10 @@
 import os as os
 import itertools
 
+# one of the first python scripts that I wrote.
+# it contains helper code to convert one CSP into another via
+# the flip operation
+
 def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = itertools.tee(iterable)

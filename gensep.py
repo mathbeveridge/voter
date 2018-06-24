@@ -2,6 +2,8 @@ import mysql.connector
 import flippable
 
 
+# ignore this file. Use gensepbatch.py instead.
+
 idx_get_unprocessed_query = 0
 idx_pref_exists_query = 1
 idx_flip_exists_query = 2

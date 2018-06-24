@@ -3,7 +3,13 @@ from scipy.optimize import linprog
 import math
 import numpy
 
-
+# creates and solves an LP to find the representation of the CSP as
+# the sum of atomic weights on the items. Such CSPs are called "coherent"
+# if there is a representation, it is returned as a list
+# if there is no such representation, then returns []
+#
+# this is useful since there is no obvious way to tell whether a CSP is
+# coherent or not
 def represent(id):
     data = prefutils.data_from_id(id)
     bin_array = prefutils.data_to_bin_array(data, dim)

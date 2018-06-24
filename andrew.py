@@ -5,6 +5,7 @@ import prefutils
 
 
 # this is a file with some random test code
+# you can safely ignore it
 
 mylist = reversed(range(0,128))
 mylist_str = [str(x) for x in mylist]

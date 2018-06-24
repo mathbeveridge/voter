@@ -1,6 +1,8 @@
 import mysql.connector
 
 
+# helper functions for dealing with CSPs
+
 
 name_dic4 = {'15-14-13-12-11-10-7-6': 'AAAB-',
              '15-14-13-12-11-10-7-9': 'AAAB+',

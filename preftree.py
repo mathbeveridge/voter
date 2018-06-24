@@ -9,6 +9,9 @@ from anytree.exporter import DotExporter
 #          "/bean/mac/research/tran/n4sep/s3v1s4v2.csv"}
 
 
+# ignore this file. I was thinking about creating a visualization the graph
+# similar to the one found in Hodge, but the graph is way too big.
+
 dim = 5
 
 dirname = "/bean/mac/research/tran/n5sep/"

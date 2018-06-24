@@ -5,6 +5,13 @@ import flippable
 import prefutils
 import addresspref
 
+# A variation of gensepbatch that uses addresses instead of ids.
+# This will be useful for the Amazon Web Services version, which will
+# not use a database. It will keep the constructed CSP in memory, so
+# we need an efficient way to represent them. We use an address,
+# which is the idnum for the n CSPs of order n-1 you obtain by deleting a
+# column, along with a 0/1 as to whether the middle is flipped.
+
 idx_get_unprocessed_query = 0
 #idx_pref_exists_query = 1
 #idx_flip_exists_query = 2
