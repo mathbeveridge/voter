@@ -13,10 +13,7 @@ import addresspref
 # column, along with a 0/1 as to whether the middle is flipped.
 
 idx_get_unprocessed_query = 0
-#idx_pref_exists_query = 1
-#idx_flip_exists_query = 2
 idx_update_pref_query = 1
-#idx_update_flip_query = 4
 idx_update_processed_query = 2
 idx_unprocessed_count_query = 3
 
@@ -37,69 +34,126 @@ query_list_6 = [
     ]
 
 
+############################################
+#
+# Database Implementation
+#
 
+# add the newly discovered CSPs to the table
 def update_pref_table(new_pref_addr_list):
     update_query = query_list[idx_update_pref_query]
 
     param_list = [ x + (False,) for x in new_pref_addr_list]
 
-    #print('query', update_query)
-    #print('param', param_list)
-
     cur.executemany(update_query, param_list)
     conn.commit()
 
-
+# mark the processed CSPs
 def mark_processed(id_list):
     param = [ (True, id) for id in id_list]
     processed_query = query_list[idx_update_processed_query]
     cur.executemany(processed_query, param)
     conn.commit()
 
-
-
-dim = 6
-query_list = query_list_6
-
-conn = mysql.connector.connect(host='localhost', database='mysql', user='root', password='50Fl**rs')
-
-cur = conn.cursor(buffered=True)
-
-# query = ("SELECT id FROM Pref_Six WHERE processed = False")
-
-count_query = (query_list[idx_unprocessed_count_query])
-
-query = (query_list[idx_get_unprocessed_query])
-print(query)
-
-has_unprocessed = True
-idx = 1
-
-while has_unprocessed:
-
-    new_pref_address_list = []
-    processed_id_list = []
-
+def log_unprocessed():
     cur.execute(count_query)
 
     print(str(datetime.datetime.now()), '\tnum unprocessed=', cur.fetchone())
 
-    idx = idx + 1
+
+def get_unprocessed():
+    pref_line_list = []
 
     cur.execute(query)
 
-    pref_line_list = []
-
-#### xxxab this line depends on the dimension. update!
+    #### xxxab this line depends on the dimension. update!
     for (id, csp1, csp2, csp3, csp4, csp5, csp6, flip) in cur:
         pref_line_list.append([id, (csp1, csp2, csp3, csp4, csp5, csp6, flip)])
 
-    has_unprocessed = len(pref_line_list) > 0
-    # has_unprocessed = False
+    return pref_line_list
+
+############################################
+
+
+### In memory implementation
+# def log_frontier_size_naive():
+#     print(str(datetime.datetime.now()), '\tfrontier size=', len(frontier))
+#
+# def get_frontier_naive():
+#     return frontier
+#
+# def add_to_frontier_naive(new_pref_addr_list):
+#     print()
+#
+# def move_to_visited_naive(id_list):
+#
+###
+
+
+#####
+#
+# Wrapper methods for data access
+#
+
+# log the current frontier size
+def log_frontier_size():
+    log_unprocessed()
+
+# returns a list of the form (id, address) where
+# address = (id_1, .... , id_n, 0/1)
+def get_frontier():
+    return get_unprocessed()
+
+
+# add newly discovered CSPs to the frontier
+# input: a list of addresses to add to the frontier
+def add_to_frontier(new_pref_addr_list):
+    update_pref_table(new_pref_addr_list)
+
+#move from frontier to visited
+# input: a list of ids to move from the frontier to visited
+def move_to_visited(id_list):
+    mark_processed(id_list)
+
+######################################
+dim = 6
+
+### DB specific initialization code
+query_list = query_list_6
+
+conn = mysql.connector.connect(host='localhost', database='mysql', user='root', password='50Fl**rs')
+cur = conn.cursor(buffered=True)
+
+
+count_query = (query_list[idx_unprocessed_count_query])
+query = (query_list[idx_get_unprocessed_query])
+### end DB code
+
+### in memory initialization code
+
+#frontier = []
+
+#visited = []
+
+###
+
+has_frontier = True
+
+while has_frontier:
+
+    log_frontier_size()
+
+    new_pref_address_list = []
+    processed_id_list = []
+
+    pref_line_list = get_frontier()
+
+
+    has_frontier = len(pref_line_list) > 0
+    # has_frontier = False
 
     for pref_line in pref_line_list:
         top_data = addresspref.regenerate_top_data(pref_line[1], dim)
-#        data = prefutils.data_from_half_bin_array(top_data)
 
         data = prefutils.data_from_top_half(top_data)
 
@@ -116,8 +170,8 @@ while has_unprocessed:
         processed_id_list.append(pref_line[0])
 
     # print("updating for prefs ", len(new_pref_list))
-    update_pref_table(new_pref_address_list)
-    mark_processed(processed_id_list)
+    add_to_frontier(new_pref_address_list)
+    move_to_visited(processed_id_list)
 
 cur.close()
 conn.close()

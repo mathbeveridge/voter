@@ -2,6 +2,8 @@ import flippable
 import checkflip
 import prefutils
 
+import re
+
 
 
 # this is a file with some random test code
@@ -102,9 +104,22 @@ data = top + bottom
 #     else:
 #         print('\tin  order:', f)
 
-dim = 5
+dim = 6
 
-id_list = prefutils.get_id_list(5)
+name_list = prefutils.get_name_list(6)
 
-for id in id_list:
-    print(id)
+raw_set = set()
+
+for name in name_list:
+    #print(name)
+    temp = name.replace(')','').replace('(','')
+    temp = temp.replace('+',' ').replace('-',' ')
+    #print(temp)
+    raw_set.add(temp)
+
+
+for x in raw_set:
+    print(x)
+
+print(len(name_list))
+print(len(raw_set))

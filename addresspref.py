@@ -87,34 +87,21 @@ def generate_address(data, dim):
         data_array = np.array(data_bin)
 
         m = np.zeros_like(data_array)
-
         m[mask_row_idx_list, :] = 1
-
-        # print(data_array)
 
         masked_array1 = np.ma.masked_array(data_array, m)
         c_array1 = np.ma.compress_rows(masked_array1)
 
-        # print('=====',c_array1)
-
         m2 = np.zeros_like(c_array1)
-        # print('m2', m2)
         m2[:, idx] = 1
-
-        # print('m2', m2)
 
         ma2 = np.ma.masked_array(c_array1, m2)
         ca2 = np.ma.compress_cols(ma2)
 
-        # print(ca2)
-
         parent_data = [prefutils.bin_array_to_decimal(x) for x in ca2]
 
-        # print('\t\t', parent_data)
-
         parent_list.append((parent_data))
-        # print(parent_data)
-        # print(prefutils.tuple_from_data(parent_data))
+
 
     # print(parent_list)
 
@@ -133,13 +120,6 @@ def regenerate_id(address, dim):
 
 # recreates the top data from the address
 def regenerate_top_data(address, dim):
-    #print(address)
-    #csp_list = []
-
-    #for i in range(len(address)-1):
-    #    csp_list.append(get_tuple_for_address(address[i],dim-1))
-
-    #csp_bin_list = [ get_csp_bin_from_top(x,dim) for x in csp_list]
 
     csp_bin_list = get_csp_bin_for_address(address, dim)
 
@@ -154,6 +134,9 @@ def regenerate_top_data(address, dim):
         top_line = [1,]+ csp_bin_list[0][top_idx]
         bottom_line = [0,] + csp_bin_list[0][bottom_idx]
 
+        # xxxab
+        # for performance on AWS, we should eliminate the second
+        # line_passes check below. By design, it has to pass!
         if line_passes(top_line, csp_bin_list, idx_list):
             line = top_line
             top_idx = top_idx + 1
@@ -175,8 +158,8 @@ def regenerate_top_data(address, dim):
 
     # take care of the middle flip
     if address[-1] == 0:
-        #print('updating final line', working_csp[-1])
         working_csp[-1] = [1-x for x in working_csp[-1]]
+
     #print(working_csp)
 
 
