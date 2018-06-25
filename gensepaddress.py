@@ -40,7 +40,7 @@ query_list_6 = [
 #
 
 # add the newly discovered CSPs to the table
-def update_pref_table(new_pref_addr_list):
+def add_to_frontier_db(new_pref_addr_list):
     update_query = query_list[idx_update_pref_query]
 
     param_list = [ x + (False,) for x in new_pref_addr_list]
@@ -49,26 +49,30 @@ def update_pref_table(new_pref_addr_list):
     conn.commit()
 
 # mark the processed CSPs
-def mark_processed(id_list):
+def move_to_visited_db(id_list):
     param = [ (True, id) for id in id_list]
     processed_query = query_list[idx_update_processed_query]
     cur.executemany(processed_query, param)
     conn.commit()
 
-def log_unprocessed():
+def log_frontier_size_db():
     cur.execute(count_query)
 
     print(str(datetime.datetime.now()), '\tnum unprocessed=', cur.fetchone())
 
 
-def get_unprocessed():
+def get_frontier_db():
     pref_line_list = []
 
+    print(query)
     cur.execute(query)
 
     #### xxxab this line depends on the dimension. update!
-    for (id, csp1, csp2, csp3, csp4, csp5, csp6, flip) in cur:
-        pref_line_list.append([id, (csp1, csp2, csp3, csp4, csp5, csp6, flip)])
+    for (id, csp1, csp2, csp3, csp4, csp5, flip) in cur:
+        pref_line_list.append([id, (csp1, csp2, csp3, csp4, csp5, flip)])
+
+#    for (id, csp1, csp2, csp3, csp4, csp5, csp6, flip) in cur:
+#        pref_line_list.append([id, (csp1, csp2, csp3, csp4, csp5, csp6, flip)])
 
     return pref_line_list
 
@@ -76,18 +80,24 @@ def get_unprocessed():
 
 
 ### In memory implementation
-# def log_frontier_size_naive():
-#     print(str(datetime.datetime.now()), '\tfrontier size=', len(frontier))
-#
-# def get_frontier_naive():
-#     return frontier
-#
-# def add_to_frontier_naive(new_pref_addr_list):
-#     print()
-#
-# def move_to_visited_naive(id_list):
-#
-###
+def log_frontier_size_naive():
+    print(str(datetime.datetime.now()), '\tfrontier size=', len(stuff) - frontier_start)
+
+def get_frontier_naive():
+    global frontier_start
+    ret_val = [(i,f) for i,f in enumerate(stuff[frontier_start:])]
+    frontier_start = len(stuff)
+    return ret_val
+
+def add_to_frontier_naive(new_pref_addr_list):
+    global stuff
+    stuff = stuff + new_pref_addr_list
+
+
+def move_to_visited_naive(id_list):
+    # no op for now
+    print("no op", len(stuff))
+
 
 
 #####
@@ -97,29 +107,29 @@ def get_unprocessed():
 
 # log the current frontier size
 def log_frontier_size():
-    log_unprocessed()
+    log_frontier_size_db()
 
 # returns a list of the form (id, address) where
 # address = (id_1, .... , id_n, 0/1)
 def get_frontier():
-    return get_unprocessed()
+    return get_frontier_db()
 
 
 # add newly discovered CSPs to the frontier
 # input: a list of addresses to add to the frontier
 def add_to_frontier(new_pref_addr_list):
-    update_pref_table(new_pref_addr_list)
+    add_to_frontier_db(new_pref_addr_list)
 
 #move from frontier to visited
 # input: a list of ids to move from the frontier to visited
 def move_to_visited(id_list):
-    mark_processed(id_list)
+    move_to_visited_db(id_list)
 
 ######################################
-dim = 6
+dim = 5
 
 ### DB specific initialization code
-query_list = query_list_6
+query_list = query_list_5
 
 conn = mysql.connector.connect(host='localhost', database='mysql', user='root', password='50Fl**rs')
 cur = conn.cursor(buffered=True)
@@ -131,9 +141,8 @@ query = (query_list[idx_get_unprocessed_query])
 
 ### in memory initialization code
 
-#frontier = []
-
-#visited = []
+stuff = [ (1,(3,3,3,3,3,1,0)) ]
+frontier_start = 0
 
 ###
 
