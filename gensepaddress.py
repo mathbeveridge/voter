@@ -210,6 +210,8 @@ frontier_start = 0
 
 new_prefs = discover_prefs(5,(3,3,3,3,3,1))
 
+print('num new prefs for 5 is', len(new_prefs) )
+
 # we could make this more performant by using the tuple instead of the top data
 # but this is backward compatible
 top_data_list = [tuple(addresspref.regenerate_top_data(p, 5)) for p in new_prefs]
@@ -218,6 +220,10 @@ addresspref.update_tuple_list(top_data_list,5)
 
 #new_prefs = discover_prefs(6,(1,1,1,1,1,1,1))
 new_prefs = discover_prefs(6,(0,0,0,0,0,0,1))
+
+
+# this is where we would handle size 7
+# what is the output? how do we know that we have succeeded?
 
 cur.close()
 conn.close()

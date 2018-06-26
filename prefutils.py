@@ -91,7 +91,7 @@ def decimal_to_bin_array(decimal, dim):
     key = (decimal, dim)
 
     if not key in dec_to_bin_dict:
-        print('adding key', key)
+        #print('adding key', key)
         dec_to_bin_dict[key] = decimal_to_bin_array_impl(decimal, dim)
 
     return dec_to_bin_dict[key]
