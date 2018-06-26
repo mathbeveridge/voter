@@ -17,14 +17,26 @@ import prefutils
 ### I think that the tuple is a more efficient storage mechanism than
 ### the string id
 def idnum_for_tuple(tuple, dim):
-    #print('tuple', tuple)
+    if dim in id_tuple_dict:
+        id_list = id_tuple_dict[dim]
+        return id_list.index(tuple)
+    else:
+        raise ValueError('id_tuple_dict not initialized for', dim)
+
+def update_tuple_list(tuple_list, dim):
+    print('********* updating', dim, tuple_list)
+    id_tuple_dict[dim] = tuple_list
+
+def idnum_for_tuple_old(tuple, dim):
+    # print('tuple', tuple)
     if dim == 4:
         return name_dic4a[tuple]
     elif dim == 5:
         # auto increment starts at 1
-        return id_tuple_list5.index(tuple) +1
+        return id_tuple_list5.index(tuple) + 1
     else:
-        raise ValueError('dimension not supported', dim)
+        raise ValueError('id_tuple_dict not initialized for', dim)
+
 
 ### the address is an integer that tells you where to find the tuple
 ### representation for the CSP. the address for dim+1 is a list of these
@@ -32,6 +44,15 @@ def idnum_for_tuple(tuple, dim):
 ###
 ### xxxab I need to change this name. location? index? pk? cspid?
 def get_tuple_for_address(address, dim):
+    if dim in id_tuple_dict:
+        id_list = id_tuple_dict[dim]
+        #print('address', address, 'id_list', id_list[address])
+        return id_list[address]
+    else:
+        raise ValueError('dimension not supported', dim)
+
+
+def get_tuple_for_address_old(address, dim):
     if dim == 4:
         return sep4[address]
     if dim == 5:
@@ -39,6 +60,7 @@ def get_tuple_for_address(address, dim):
         return id_tuple_list5[address-1]
     else:
         raise ValueError('dimension not supported', dim)
+
 
 ### converts the top half to binary
 ### and stores it in a dictionary
@@ -62,6 +84,8 @@ def get_csp_bin_for_address(address, dim):
 
     for i in range(len(address) - 1):
         csp_list.append(get_tuple_for_address(address[i], dim - 1))
+
+    #print('\tcsp_list',csp_list)
 
     csp_bin_list = [get_csp_bin_from_top(x, dim) for x in csp_list]
 
@@ -87,16 +111,17 @@ def generate_address(data, dim):
         data_array = np.array(data_bin)
 
         m = np.zeros_like(data_array)
-        m[mask_row_idx_list, :] = 1
+        m[mask_row_idx_list, 0] = 1
 
         masked_array1 = np.ma.masked_array(data_array, m)
         c_array1 = np.ma.compress_rows(masked_array1)
 
         m2 = np.zeros_like(c_array1)
-        m2[:, idx] = 1
+        m2[0, idx] = 1
 
         ma2 = np.ma.masked_array(c_array1, m2)
         ca2 = np.ma.compress_cols(ma2)
+
 
         parent_data = [prefutils.bin_array_to_decimal(x) for x in ca2]
 
@@ -106,7 +131,7 @@ def generate_address(data, dim):
     # print(parent_list)
 
     address = [idnum_for_tuple(prefutils.tuple_from_data(p), dim-1) for p in parent_list]
-    #        name = '-'.join(address) + "+" +  str(data[2**(dim-1) -1])
+
     if data[2 ** (dim - 1) - 1] < 2 ** (dim - 1):
         address.append(0)
     else:
@@ -121,6 +146,8 @@ def regenerate_id(address, dim):
 # recreates the top data from the address
 def regenerate_top_data(address, dim):
 
+    #print('regenerate', address)
+
     csp_bin_list = get_csp_bin_for_address(address, dim)
 
     top_idx = 0
@@ -134,6 +161,11 @@ def regenerate_top_data(address, dim):
         top_line = [1,]+ csp_bin_list[0][top_idx]
         bottom_line = [0,] + csp_bin_list[0][bottom_idx]
 
+#        if dim == 6:
+#            print(address)
+#            print('top', top_line, 'bottom', bottom_line)
+#            print(csp_bin_list)
+
         # xxxab
         # for performance on AWS, we should eliminate the second
         # line_passes check below. By design, it has to pass!
@@ -145,6 +177,7 @@ def regenerate_top_data(address, dim):
             bottom_idx = bottom_idx + 1
         else:
             #print('both failed', top_line, bottom_line)
+            #print('working csp', working_csp)
             raise ValueError('both top and bottom failed', top_line, bottom_line)
 
         working_csp.append(line)
@@ -161,7 +194,6 @@ def regenerate_top_data(address, dim):
         working_csp[-1] = [1-x for x in working_csp[-1]]
 
     #print(working_csp)
-
 
     regen_data = [prefutils.bin_array_to_decimal(x) for x in working_csp]
 
@@ -254,9 +286,7 @@ name_dic4a = {
     (15, 14, 13, 11, 7, 12, 10, 6): 13,
 }
 
-def mytuple_from_id(id):
-    val = tuple( [int(x) for x in id.split('-')])
-    return val
+
 
 
 
@@ -317,13 +347,13 @@ def get_id_tuple_list(dim):
 
 
 def run():
-    dim = 5
+    dim = 4
 
     conn = mysql.connector.connect(host='localhost', database='mysql', user='root', password='50Fl**rs')
 
     cur = conn.cursor(buffered=True)
 
-    name_dic = name_dic4a
+    #name_dic = name_dic4a
 
     # populate the name_dic
     # name_dic = {}
@@ -420,18 +450,11 @@ def run():
 
 csp_bin_dict = {}
 
+id_tuple_dict = {}
+id_tuple_dict[4] = sep4
+
 
 #### xxxab fix this: code moved from pref utils because import conflicts
-id_tuple_list5 = get_id_tuple_list(5)
-
-#for id in id_list5:
-#    print(id, mytuple_from_id(id))
+#id_tuple_list5 = get_id_tuple_list(5)
 
 
-#id_tuple_list5 = [ prefutils.tuple_from_id(x) for x in id_list5 ]
-
-#for idt in id_tuple_list5:
-#    print(idt)
-
-
-#run()

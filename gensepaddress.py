@@ -85,13 +85,19 @@ def log_frontier_size_naive():
 
 def get_frontier_naive():
     global frontier_start
+    global stuff
     ret_val = [(i,f) for i,f in enumerate(stuff[frontier_start:])]
     frontier_start = len(stuff)
     return ret_val
 
 def add_to_frontier_naive(new_pref_addr_list):
+    #print('no op')
     global stuff
-    stuff = stuff + new_pref_addr_list
+
+    for p in new_pref_addr_list:
+        if not p in stuff:
+            stuff.append(p)
+
 
 
 def move_to_visited_naive(id_list):
@@ -107,26 +113,78 @@ def move_to_visited_naive(id_list):
 
 # log the current frontier size
 def log_frontier_size():
-    log_frontier_size_db()
+    log_frontier_size_naive()
+
+def initialize_frontier(pref):
+    global stuff
+    global frontier_start
+
+    stuff = [pref]
+    frontier_start = 0
 
 # returns a list of the form (id, address) where
 # address = (id_1, .... , id_n, 0/1)
 def get_frontier():
-    return get_frontier_db()
+    return get_frontier_naive()
 
 
 # add newly discovered CSPs to the frontier
 # input: a list of addresses to add to the frontier
 def add_to_frontier(new_pref_addr_list):
-    add_to_frontier_db(new_pref_addr_list)
+    add_to_frontier_naive(new_pref_addr_list)
 
 #move from frontier to visited
 # input: a list of ids to move from the frontier to visited
 def move_to_visited(id_list):
-    move_to_visited_db(id_list)
+    move_to_visited_naive(id_list)
+
+
+def discover_prefs(dim, initial_pref):
+
+    print('########## discovering', dim, initial_pref)
+
+    has_frontier = True
+
+    initialize_frontier(initial_pref)
+
+    while has_frontier:
+
+        log_frontier_size()
+
+        new_pref_address_list = []
+        processed_id_list = []
+
+        pref_line_list = get_frontier()
+
+        has_frontier = len(pref_line_list) > 0
+        # has_frontier = False
+
+        for pref_line in pref_line_list:
+            #print('pref line', pref_line)
+            top_data = addresspref.regenerate_top_data(pref_line[1], dim)
+
+            data = prefutils.data_from_top_half(top_data)
+
+            flippable_pairs = flippable.get_flippable_pairs(data, dim)
+
+            flipped_data = [flippable.flip(data, flip_pair, dim) for flip_pair in flippable_pairs]
+
+            for pair, f in zip(flippable_pairs, flipped_data):
+                flip_address = addresspref.generate_address(f, dim)
+                # print(flip_address)
+                new_pref_address_list.append(flip_address)
+
+            processed_id_list.append(pref_line[0])
+
+        # print("updating for prefs ", len(new_pref_list))
+        add_to_frontier(new_pref_address_list)
+        move_to_visited(processed_id_list)
+
+    return stuff
+
 
 ######################################
-dim = 5
+#dim = 5
 
 ### DB specific initialization code
 query_list = query_list_5
@@ -141,46 +199,25 @@ query = (query_list[idx_get_unprocessed_query])
 
 ### in memory initialization code
 
-stuff = [ (1,(3,3,3,3,3,1,0)) ]
+stuff = []
 frontier_start = 0
 
-###
-
-has_frontier = True
-
-while has_frontier:
-
-    log_frontier_size()
-
-    new_pref_address_list = []
-    processed_id_list = []
-
-    pref_line_list = get_frontier()
+#stuff = [ (3,3,3,3,3,1,0)  ]
+#stuff = [ (1,1,1,1,1,1,1,1) ]
 
 
-    has_frontier = len(pref_line_list) > 0
-    # has_frontier = False
+### end in memory initialization code
 
-    for pref_line in pref_line_list:
-        top_data = addresspref.regenerate_top_data(pref_line[1], dim)
+new_prefs = discover_prefs(5,(3,3,3,3,3,1))
 
-        data = prefutils.data_from_top_half(top_data)
+# we could make this more performant by using the tuple instead of the top data
+# but this is backward compatible
+top_data_list = [tuple(addresspref.regenerate_top_data(p, 5)) for p in new_prefs]
 
-        flippable_pairs = flippable.get_flippable_pairs(data, dim)
+addresspref.update_tuple_list(top_data_list,5)
 
-        flipped_data = [flippable.flip(data, flip_pair, dim) for flip_pair in flippable_pairs]
-
-        for pair, f in zip(flippable_pairs, flipped_data):
-
-            flip_address = addresspref.generate_address(f,dim)
-            #print(flip_address)
-            new_pref_address_list.append(flip_address)
-
-        processed_id_list.append(pref_line[0])
-
-    # print("updating for prefs ", len(new_pref_list))
-    add_to_frontier(new_pref_address_list)
-    move_to_visited(processed_id_list)
+#new_prefs = discover_prefs(6,(1,1,1,1,1,1,1))
+new_prefs = discover_prefs(6,(0,0,0,0,0,0,1))
 
 cur.close()
 conn.close()

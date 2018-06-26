@@ -4,6 +4,8 @@ import prefutils
 
 import re
 
+import numpy as np
+
 
 
 # this is a file with some random test code
@@ -27,8 +29,8 @@ data = [x for x in reversed(range(0,128))]
 
 print('zzzzzz',data)
 
-id = flippable.data_to_id(data)
-data2 = flippable.data_from_id(id)
+id = prefutils.data_to_id(data)
+data2 = prefutils.data_from_id(id)
 
 
 
@@ -70,7 +72,7 @@ id = "31-30-29-27-28-23-26-25-15-22-21-24-19-14-13-11"
 
 #id = '63-62-61-59-60-58-57-55-47-31-56-54-53-46-51-45-30-43-29-52-27-50-44-49-42-28-41-26-39-25-23-15'
 
-data = flippable.data_from_id(id)
+data = prefutils.data_from_id(id)
 
 bottom = [18,11,17,12,10,7,16,6,9,8,5,3,4,2,1,0]
 top = [31-x for x in reversed(bottom)]
@@ -104,22 +106,38 @@ data = top + bottom
 #     else:
 #         print('\tin  order:', f)
 
-dim = 6
+def getNames():
+    dim = 6
 
-name_list = prefutils.get_name_list(6)
+    name_list = prefutils.get_name_list(6)
 
-raw_set = set()
+    raw_set = set()
 
-for name in name_list:
-    #print(name)
-    temp = name.replace(')','').replace('(','')
-    temp = temp.replace('+',' ').replace('-',' ')
-    #print(temp)
-    raw_set.add(temp)
+    for name in name_list:
+        #print(name)
+        temp = name.replace(')','').replace('(','')
+        temp = temp.replace('+',' ').replace('-',' ')
+        #print(temp)
+        raw_set.add(temp)
 
 
-for x in raw_set:
-    print(x)
+    for x in raw_set:
+        print(x)
 
-print(len(name_list))
-print(len(raw_set))
+    print(len(name_list))
+    print(len(raw_set))
+
+
+A = [[1,2,3],[4,5,6], [7,8,9],[10,11,12]]
+
+data_array = np.array(A)
+
+m = np.zeros_like(data_array)
+m[[1,3], 0] = 1
+
+masked_array1 = np.ma.masked_array(data_array, m)
+c_array1 = np.ma.compress_rows(masked_array1)
+
+print(masked_array1)
+print(m)
+print(c_array1)

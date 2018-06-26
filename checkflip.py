@@ -1,5 +1,6 @@
 import mysql.connector
 import flippable
+import prefutils
 
 
 
@@ -267,8 +268,8 @@ cur = conn.cursor(buffered=True)
 
 #lex_half_data = [31,30,29,27,23,15,28,26,22,14,25,21,13,19,11,7]
 lex_half_data = [31,30,29,27,23,15,28,26,25,22,21,19,14,13,11,7]
-lex_data = flippable.data_from_top_half(lex_half_data)
-lex_id = flippable.data_to_id(lex_data)
+lex_data = prefutils.data_from_top_half(lex_half_data)
+lex_id = prefutils.data_to_id(lex_data)
 
 dim = 6
 

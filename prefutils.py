@@ -20,6 +20,9 @@ name_dic4 = {'15-14-13-12-11-10-7-6': 'AAAB-',
              '15-14-13-11-7-12-10-6': 'BBBB-',
              }
 
+bin_to_dec_dict = {}
+dec_to_bin_dict = {}
+
 # Converts [3,2,1,0] to '3-2-1-0'
 def data_to_str(data):
     return '-'.join(str(x) for x in data)
@@ -64,7 +67,8 @@ def tuple_from_data(data):
     half = len(data)//2
     return tuple(data[:half])
 
-
+# xxxab change this to a tuple instead of an array
+# and store the values: why recreate every time? just look it up
 
 # Converts a binary array to a decimal
 # Converts [1,0] to 2
@@ -72,12 +76,27 @@ def tuple_from_data(data):
 # Converts [1,1] to 3
 # Converts [1,0,1,0] to 8 + 2 = 10
 def bin_array_to_decimal(bin_array):
-    return sum(x * 2**i for i,x in enumerate(reversed(bin_array)))
+    return bin_tuple_to_decimal(tuple(bin_array))
+#    return sum(x * 2**i for i,x in enumerate(reversed(bin_array)))
 
+def bin_tuple_to_decimal(bin_tuple):
+    if not bin_tuple in bin_to_dec_dict:
+        bin_to_dec_dict[bin_tuple] =  sum(x * 2**i for i,x in enumerate(reversed(bin_tuple)))
+
+    return bin_to_dec_dict[bin_tuple]
 
 # converts decimal to binary array padded with leading zeros
 # decimal_to_bin_array(3, 4) returns [0,0,1,1]
 def decimal_to_bin_array(decimal, dim):
+    key = (decimal, dim)
+
+    if not key in dec_to_bin_dict:
+        print('adding key', key)
+        dec_to_bin_dict[key] = decimal_to_bin_array_impl(decimal, dim)
+
+    return dec_to_bin_dict[key]
+
+def decimal_to_bin_array_impl(decimal, dim):
     """ Given a whole, decimal integer,
         convert it to a binary
         representation
