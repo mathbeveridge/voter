@@ -84,13 +84,25 @@ def write_word(word):
     return ''.join(letters)
 
 #############
-dim = 4
+dim = 6
 
-set_list = list(itertools.combinations(range(dim), 3))
+# I have reversed the roles of the numbers in my checks. So the subset enumeration is off.
+# Come back to this hack fix and make it work for all n.
+
+set_list1 = list(itertools.combinations(range(dim), 3))
+
+set_list = [ (5 - x[2], 5-x[1], 5-x[0]) for x in set_list1]
+
+#set_list = [(4,3,2),(4,3,1),(4,3,0),(4,2,1),(4,2,0),(4,1,0),(3,2,1),(3,2,0),(3,1,0),(2,1,0)]
+
+#set_list = [(2,3,4),(1,3,4),(0,3,4),(1,2,4),(0,2,4),(0,1,4),(1,2,3),(0,2,3),(0,1,3),(0,1,2)]
+
+print(set_list)
 
 my_word = {}
 
 for s in set_list:
+    print(s)
     my_word[s] = 0
 
 foo = build_words(my_word)
@@ -100,7 +112,34 @@ foo = build_words(my_word)
 for f in foo:
     print(f)
 
+print('xxxxxxxxxxxxxxxxxxxxxx')
+
 print(len(foo))
 print(len(set(foo)))
+
+
+csp_words = []
+
+with open('/Users/abeverid/PycharmProjects/voter/data/n6sep-shortname.csv', 'r') as f:
+    for line in f.readlines():
+        data = line.split(',')
+        data.pop(0)
+        data.pop(-1)
+
+        csp_words.append(''.join(data))
+
+print('short name len', len(csp_words))
+
+bad_words = []
+
+for w in foo:
+    if not w in csp_words:
+        bad_words.append(w)
+#    else:
+#        print('found word', w)
+
+print('bad words', len(bad_words))
+for b in bad_words:
+    print(b)
 
 

@@ -91,6 +91,12 @@ def line_passes(line, csp_bin_list, idx_list):
             temp_line = [y for y in line]
             temp_line.pop(i)
 
+            # if (len(idx_list) == 6):
+            #     print(i,x,line, idx_list)
+            #     print(len(csp_bin_list))
+            #     print(csp_bin_list)
+            #     print(csp_bin_list[i])
+
             if not temp_line == csp_bin_list[i][idx_list[i]]:
                 #print(line, temp_line, 'fails', i, csp_bin_list[i][idx_list[i]])
                 passes = False
@@ -320,10 +326,12 @@ def regenerate_top_data(prev_stage, address, dim):
     return regen_data
 
 
-def discover_prefs(prev_stage, dim):
+def discover_prefs(prev_stage, initial_node, dim):
     frontier = set()
-    visited = set()
-    frontier.add((3, 3, 3, 3, 3, 1))
+    visited = []
+    frontier.add(initial_node)
+
+    print('discovering from', initial_node, dim)
 
     while frontier:
         node = frontier.pop()
@@ -338,7 +346,7 @@ def discover_prefs(prev_stage, dim):
             if neighbor not in visited:
                 frontier.add(neighbor)
 
-        visited.add(node)
+        visited.append(node)
         if len(visited) % 100 == 0:
             print('visited=%d, frontier=%d' % (len(visited), len(frontier)))
 
@@ -371,7 +379,8 @@ sep4 = (
 )
 
 
-sep5 = discover_prefs(sep4, 5)
+sep5 = discover_prefs(sep4,(3, 3, 3, 3, 3, 1), 5)
 print(len(sep5))
-sep6 = discover_prefs(sep5, 6)
+print('sep5[0]', sep5[0])
+sep6 = discover_prefs(sep5, (0,0,0,0,0,0,1), 6)
 print(len(sep6))
