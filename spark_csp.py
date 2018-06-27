@@ -381,6 +381,7 @@ sep4 = (
 
 sep5 = discover_prefs(sep4,(3, 3, 3, 3, 3, 1), 5)
 print(len(sep5))
-print('sep5[0]', sep5[0])
 sep6 = discover_prefs(sep5, (0,0,0,0,0,0,1), 6)
 print(len(sep6))
+#sep7 = discover_prefs(sep6, (0,0,0,0,0,0,0,1), 7)
+#print(len(sep7))
