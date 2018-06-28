@@ -347,10 +347,10 @@ def discover_prefs(prev_stage, initial_node, dim):
                 frontier.add(neighbor)
 
         visited.append(node)
-        if len(visited) % 100 == 0:
+        if len(visited) % 1000 == 0:
             print('visited=%d, frontier=%d' % (len(visited), len(frontier)))
 
-    return [tuple(regenerate_top_data(prev_stage, p, 5)) for p in visited]
+    return [tuple(regenerate_top_data(prev_stage, p, dim)) for p in visited]
 
 
 
