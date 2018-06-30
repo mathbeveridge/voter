@@ -393,30 +393,84 @@ def node_neighbors(prev_stage, node, dim):
         neighbors.append(generate_address(prev_stage, f, dim))
     return neighbors
 
-def discover_prefs_spark(sparkContext, prev_stage, initial_node, dim):
-    sc = sparkContext
-    prev_stage_bc = sc.broadcast(prev_stage)
-    frontier = sc.parallelize([initial_node])
-    visited = sc.parallelize([])
 
+import json
+
+
+def dump_and_count(num_lines, node):
+    num_lines += 1
+    return json.dumps(node)
+
+def node_to_file(sc, node_rdd, path):
+    num_lines = sc.accumulator(0)
+
+    node_rdd \
+        .map(lambda node: dump_and_count(num_lines, node)) \
+        .coalesce(100, False) \
+        .saveAsTextFile(path)
+
+    return num_lines.value
+
+def file_to_nodes(sc, path):
+    return sc.textFile(path) \
+      .map(lambda line: tuple(json.loads(line)))
+
+def discover_prefs_spark(sparkContext, prefix, initial_node, dim):
     print('discovering from', initial_node, dim)
 
-    while not frontier.isEmpty():
+    sc = sparkContext
+
+    prev_stage = file_to_nodes(sc, '%s/dim-%d/final.visited' % (prefix, dim-1)).collect()
+    print(prev_stage)
+    prefix += '/dim-' + str(dim)
+
+    prev_stage_bc = sc.broadcast(prev_stage)
+
+    node_to_file(sc, sc.parallelize([initial_node]), prefix + '/0.frontier')
+    node_to_file(sc, sc.parallelize([]), prefix + '/0.visited')
+
+    for i in itertools.count():
+        print('starting %d' % i)
+        frontier = file_to_nodes(sc, '%s/%d.frontier' % (prefix, i))
+
         # Calculate nodes that can be seen in the next step
-        reachable = frontier.flatMap(lambda node: node_neighbors(prev_stage_bc.value, node, dim)).distinct().cache()
-        visited = visited.union(frontier).distinct().cache()
-        frontier = reachable.subtract(visited).cache()
-        print('sizes are reachable=%d, visited=%d, frontier=%d' % (reachable.count(), visited.count(), frontier.count()))
+        reachable = frontier.flatMap(lambda node: node_neighbors(prev_stage_bc.value, node, dim)).distinct()
+        # print('reachable length after %d is %d' % (i, reachable.count(),))
+        node_to_file(sc, reachable, '%s/%d.reachable' % (prefix, i))
+
+        # Calculate the next visited based on the current one visited and frontier
+        visited = file_to_nodes(sc, '%s/%d.visited' % (prefix, i))
+        next_visited = visited.union(frontier).distinct()
+        # print('visited length after %d is %d' % (i, next_visited.count(),))
+        node_to_file(sc, next_visited, '%s/%d.visited' % (prefix, i + 1))
+
+        # Calculate the next frontier
+        next_frontier = reachable.subtract(next_visited)
+        # print('frontier length is %d' % (next_frontier.count(),))
+        frontier_size = node_to_file(sc, next_frontier, '%s/%d.frontier' % (prefix, i + 1))
+        print('size of frontier is %d' % frontier_size)
+
+        if frontier_size == 0:
+            node_to_file(sc, next_visited, '%s/final.visited' % (prefix,))
+            break
 
 
 def spark_main():
     from pyspark import SparkContext, SparkConf
 
-    conf = SparkConf().setAppName("CSP").setMaster("local[*]")
-    sc = SparkContext(conf=conf)
-    sc.setLogLevel("ERROR")
+    from pyspark.serializers import MarshalSerializer
 
-    sep5 = discover_prefs_spark(sc, SEP_4,(3, 3, 3, 3, 3, 1), 5)
+
+    prefix = '/Users/ssen/PycharmProjects/voter/bfs'
+
+    conf = SparkConf().setAppName("CSP").setMaster("local[*]")
+    sc = SparkContext(conf=conf, serializer=MarshalSerializer())
+    sc.setLogLevel("WARN")
+
+    # Write the fourth step if it already exists, that's fine!
+    node_to_file(sc, sc.parallelize(SEP_4), '%s/dim-4/final.visited' % (prefix,))
+
+    discover_prefs_spark(sc, prefix, (3, 3, 3, 3, 3, 1), 5)
 
 
 # sparkless_main()
