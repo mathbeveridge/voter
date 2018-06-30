@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+
+
 import itertools
 import numpy as np
 
@@ -335,14 +338,7 @@ def discover_prefs(prev_stage, initial_node, dim):
 
     while frontier:
         node = frontier.pop()
-        top_data = regenerate_top_data(prev_stage, node, dim)
-        data = data_from_top_half(top_data)
-        flippable_pairs = get_flippable_pairs(data, dim)
-
-        flipped_data = [flip(data, flip_pair, dim) for flip_pair in flippable_pairs]
-
-        for pair, f in zip(flippable_pairs, flipped_data):
-            neighbor = generate_address(prev_stage, f, dim)
+        for neighbor in node_neighbors(prev_stage, node, dim):
             if neighbor not in visited:
                 frontier.add(neighbor)
 
@@ -352,9 +348,7 @@ def discover_prefs(prev_stage, initial_node, dim):
 
     return [tuple(regenerate_top_data(prev_stage, p, dim)) for p in visited]
 
-
-
-sep4 = (
+SEP_4 = (
     (15, 14, 13, 12, 11, 10, 7, 6),#
     (15, 14, 13, 12, 11, 10, 7, 9),#
 
@@ -378,10 +372,52 @@ sep4 = (
     (15, 14, 13, 11, 7, 12, 10, 6)
 )
 
+def sparkless_main():
 
-sep5 = discover_prefs(sep4,(3, 3, 3, 3, 3, 1), 5)
-print(len(sep5))
-sep6 = discover_prefs(sep5, (0,0,0,0,0,0,1), 6)
-print(len(sep6))
-#sep7 = discover_prefs(sep6, (0,0,0,0,0,0,0,1), 7)
-#print(len(sep7))
+
+    sep5 = discover_prefs(SEP_4,(3, 3, 3, 3, 3, 1), 5)
+    print(len(sep5))
+    sep6 = discover_prefs(sep5, (0,0,0,0,0,0,1), 6)
+    print(len(sep6))
+    #sep7 = discover_prefs(sep6, (0,0,0,0,0,0,0,1), 7)
+    #print(len(sep7))
+
+def node_neighbors(prev_stage, node, dim):
+    top_data = regenerate_top_data(prev_stage, node, dim)
+    data = data_from_top_half(top_data)
+    flippable_pairs = get_flippable_pairs(data, dim)
+    flipped_data = [flip(data, flip_pair, dim) for flip_pair in flippable_pairs]
+
+    neighbors = []
+    for pair, f in zip(flippable_pairs, flipped_data):
+        neighbors.append(generate_address(prev_stage, f, dim))
+    return neighbors
+
+def discover_prefs_spark(sparkContext, prev_stage, initial_node, dim):
+    sc = sparkContext
+    prev_stage_bc = sc.broadcast(prev_stage)
+    frontier = sc.parallelize([initial_node])
+    visited = sc.parallelize([])
+
+    print('discovering from', initial_node, dim)
+
+    while not frontier.isEmpty():
+        # Calculate nodes that can be seen in the next step
+        reachable = frontier.flatMap(lambda node: node_neighbors(prev_stage_bc.value, node, dim)).distinct().cache()
+        visited = visited.union(frontier).distinct().cache()
+        frontier = reachable.subtract(visited).cache()
+        print('sizes are reachable=%d, visited=%d, frontier=%d' % (reachable.count(), visited.count(), frontier.count()))
+
+
+def spark_main():
+    from pyspark import SparkContext, SparkConf
+
+    conf = SparkConf().setAppName("CSP").setMaster("local[*]")
+    sc = SparkContext(conf=conf)
+    sc.setLogLevel("ERROR")
+
+    sep5 = discover_prefs_spark(sc, SEP_4,(3, 3, 3, 3, 3, 1), 5)
+
+
+# sparkless_main()
+spark_main()
