@@ -432,18 +432,16 @@ def discover_prefs_spark(sparkContext, prefix, dim):
     sc = sparkContext
 
     prev_stage = file_to_nodes(sc, '%s/dim-%d/final.visited' % (prefix, dim-1)).collect()
-    print(prev_stage)
-    prefix += '/dim-' + str(dim)
-
     initial_node = get_initial_node(prev_stage, dim)
-
     print('\tdiscovering from', initial_node)
 
 
+    prefix += '/dim-' + str(dim)
     prev_stage_bc = sc.broadcast(prev_stage)
 
     node_to_file(sc, sc.parallelize([initial_node]), prefix + '/0.frontier')
     node_to_file(sc, sc.parallelize([]), prefix + '/0.visited')
+    discovered = 0
 
     for i in itertools.count():
         print('starting %d' % i)
@@ -464,7 +462,8 @@ def discover_prefs_spark(sparkContext, prefix, dim):
         next_frontier = reachable.subtract(next_visited)
         # print('frontier length is %d' % (next_frontier.count(),))
         frontier_size = node_to_file(sc, next_frontier, '%s/%d.frontier' % (prefix, i + 1))
-        print('size of frontier is %d' % frontier_size)
+        discovered += frontier_size
+        print('size of frontier is %d, total distinct nodes is %d' % (frontier_size, discovered))
 
         if frontier_size == 0:
             node_to_file(sc, next_visited, '%s/final.visited' % (prefix,))
@@ -477,17 +476,17 @@ def spark_main():
     from pyspark.serializers import MarshalSerializer
 
 
-    prefix = '/Users/ssen/PycharmProjects/voter/bfs'
+    prefix = 'bfs'
 
     conf = SparkConf().setAppName("CSP").setMaster("local[*]")
     sc = SparkContext(conf=conf, serializer=MarshalSerializer())
     sc.setLogLevel("WARN")
 
     # Write the fourth step if it already exists, that's fine!
-    node_to_file(sc, sc.parallelize(SEP_4), '%s/dim-4/final.visited' % (prefix,))
+    #node_to_file(sc, sc.parallelize(SEP_4), '%s/dim-4/final.visited' % (prefix,))
+    #discover_prefs_spark(sc, prefix, 5)
+    discover_prefs_spark(sc, prefix, 6)
 
-    discover_prefs_spark(sc, prefix, 5)
 
-
-sparkless_main()
-#spark_main()
+#sparkless_main()
+spark_main()
