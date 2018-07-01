@@ -329,9 +329,10 @@ def regenerate_top_data(prev_stage, address, dim):
     return regen_data
 
 
-def discover_prefs(prev_stage, initial_node, dim):
+def discover_prefs(prev_stage, dim):
     frontier = set()
     visited = []
+    initial_node = get_initial_node(prev_stage, dim)
     frontier.add(initial_node)
 
     print('discovering from', initial_node, dim)
@@ -372,14 +373,23 @@ SEP_4 = (
     (15, 14, 13, 11, 7, 12, 10, 6)
 )
 
+def get_initial_node(prev_stage, dim):
+    id = tuple(reversed(range(2**(dim-2), 2**(dim-1))))
+    idx = prev_stage.index(id)
+
+    node = (idx,) * dim + (1,)
+
+    return node
+
 def sparkless_main():
 
 
-    sep5 = discover_prefs(SEP_4,(3, 3, 3, 3, 3, 1), 5)
+    sep5 = discover_prefs(SEP_4, 5)
     print(len(sep5))
-    sep6 = discover_prefs(sep5, (0,0,0,0,0,0,1), 6)
+
+    sep6 = discover_prefs(sep5, 6)
     print(len(sep6))
-    #sep7 = discover_prefs(sep6, (0,0,0,0,0,0,0,1), 7)
+    #sep7 = discover_prefs(sep6, 7)
     #print(len(sep7))
 
 def node_neighbors(prev_stage, node, dim):
@@ -415,14 +425,20 @@ def file_to_nodes(sc, path):
     return sc.textFile(path) \
       .map(lambda line: tuple(json.loads(line)))
 
-def discover_prefs_spark(sparkContext, prefix, initial_node, dim):
-    print('discovering from', initial_node, dim)
+def discover_prefs_spark(sparkContext, prefix, dim):
+
+    print('discovering dim', dim)
 
     sc = sparkContext
 
     prev_stage = file_to_nodes(sc, '%s/dim-%d/final.visited' % (prefix, dim-1)).collect()
     print(prev_stage)
     prefix += '/dim-' + str(dim)
+
+    initial_node = get_initial_node(prev_stage, dim)
+
+    print('\tdiscovering from', initial_node)
+
 
     prev_stage_bc = sc.broadcast(prev_stage)
 
@@ -470,8 +486,8 @@ def spark_main():
     # Write the fourth step if it already exists, that's fine!
     node_to_file(sc, sc.parallelize(SEP_4), '%s/dim-4/final.visited' % (prefix,))
 
-    discover_prefs_spark(sc, prefix, (3, 3, 3, 3, 3, 1), 5)
+    discover_prefs_spark(sc, prefix, 5)
 
 
-# sparkless_main()
-spark_main()
+sparkless_main()
+#spark_main()
