@@ -375,6 +375,9 @@ SEP_4 = (
 
 def get_initial_node(prev_stage, dim):
     id = tuple(reversed(range(2**(dim-2), 2**(dim-1))))
+
+    print('get initial node', id, 'len(prev_stage)', len(prev_stage))
+
     idx = prev_stage.index(id)
 
     node = (idx,) * dim + (1,)
@@ -488,5 +491,5 @@ def spark_main():
     discover_prefs_spark(sc, prefix, 6)
 
 
-#sparkless_main()
-spark_main()
+sparkless_main()
+#spark_main()
