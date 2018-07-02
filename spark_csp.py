@@ -491,5 +491,5 @@ def spark_main():
     discover_prefs_spark(sc, prefix, 6)
 
 
-sparkless_main()
-#spark_main()
+#sparkless_main()
+spark_main()
